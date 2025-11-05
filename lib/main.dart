@@ -111,9 +111,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Deleting a product by id
-  // TODO: Complete this function
   Future<void> _deleteProduct(String productId) async {
-    // YOUR CODE HERE
+
+    await _products.doc(productId).delete();
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -128,7 +128,6 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('CRUD operations'),
       ),
-      // Using StreamBuilder to display all products from Firestore in real-time
       body: StreamBuilder(
         stream: _products.snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> streamSnapshot) {
@@ -149,13 +148,11 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit),
-                            onPressed: () =>
-                                _createOrUpdate(documentSnapshot),
+                            onPressed: () => _createOrUpdate(documentSnapshot),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
-                            onPressed: () =>
-                                _deleteProduct(documentSnapshot.id),
+                            onPressed: () => _deleteProduct(documentSnapshot.id),
                           ),
                         ],
                       ),
