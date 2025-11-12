@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
 import 'item.dart';
 import 'firestore_service.dart';
 import 'add_edit_screen.dart';
+import 'auth_screen.dart';
+import 'profile_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,11 +27,36 @@ class InventoryApp extends StatelessWidget {
     return MaterialApp(
       title: 'Inventory Management App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
         useMaterial3: true,
         scaffoldBackgroundColor: const Color.fromARGB(255, 175, 175, 175), 
       ),
-      home: const InventoryHomePage(title: 'Inventory Home Page'),
+      home: const AuthWrapper(),
+    );
+  }
+}
+
+// AuthWrapper to check if user is logged in
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        
+        if (snapshot.hasData) {
+          return const InventoryHomePage(title: 'Inventory Home Page');
+        }
+        
+        return const AuthScreen();
+      },
     );
   }
 }
@@ -47,16 +75,53 @@ class _InventoryHomePageState extends State<InventoryHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        actions: [
+          // Profile icon button
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Container(
-        color: const Color(0xFFF2F4F7), // consistent background color
+        color: const Color.fromARGB(255, 159, 107, 10),
         child: Column(
           children: [
+            // User info banner
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: Colors.black,
+              child: Row(
+                children: [
+                  const Icon(Icons.person, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Logged in as: ${user?.email ?? 'Unknown'}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             // Search bar
             Padding(
               padding: const EdgeInsets.all(12.0),
